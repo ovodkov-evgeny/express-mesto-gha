@@ -23,7 +23,7 @@ module.exports.createCard = (req, res) => {
       if (error.name === 'ValidationError') {
         return res
           .status(BAD_REQUEST_CODE)
-          .send({ message: `Переданы некорректные данные` });
+          .send({ message: 'Переданы некорректные данные' });
       }
       return res
         .status(DEFAUTL_CODE)

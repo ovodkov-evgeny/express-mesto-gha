@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const userRouter = require('./routes/users');
 const cardRouter = require('./routes/cards');
+
 const { PORT = 3000 } = process.env;
 
 const app = express();
@@ -21,9 +22,9 @@ app.use((req, res, next) => {
 
 app.use(userRouter);
 app.use(cardRouter);
-app.use('*', (req, res) => res.status(404).send({ message: 'Запрошен не существующий ресурс' }));
-
+app.use('*', (req, res) => res.status(404).send({ message: 'Запрошена не существующая страница' }));
 
 app.listen(PORT, () => {
-  console.log(`App listening on port ${PORT}`)
+  // eslint-disable-next-line no-console
+  console.log(`App listening on port ${PORT}`);
 });

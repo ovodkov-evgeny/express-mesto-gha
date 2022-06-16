@@ -5,5 +5,5 @@ const DEFAUTL_CODE = 500;
 module.exports = {
   BAD_REQUEST_CODE,
   NOT_FOUND_CODE,
-  DEFAUTL_CODE
+  DEFAUTL_CODE,
 };
