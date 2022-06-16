@@ -2,6 +2,9 @@ const express = require('express');
 const mongoose = require('mongoose');
 const userRouter = require('./routes/users');
 const cardRouter = require('./routes/cards');
+const {
+  NOT_FOUND_CODE,
+} = require('./utils/constants');
 
 const { PORT = 3000 } = process.env;
 
@@ -22,7 +25,7 @@ app.use((req, res, next) => {
 
 app.use(userRouter);
 app.use(cardRouter);
-app.use('*', (req, res) => res.status(404).send({ message: 'Запрошена не существующая страница' }));
+app.use('*', (req, res) => res.status(NOT_FOUND_CODE).send({ message: 'Запрошена не существующая страница' }));
 
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console
