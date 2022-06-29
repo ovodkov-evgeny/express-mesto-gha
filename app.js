@@ -1,10 +1,15 @@
 const express = require('express');
+require('dotenv').config();
 const mongoose = require('mongoose');
+const cookieParser = require('cookie-parser');
+const { celebrate, Joi, errors } = require('celebrate');
+const { login, createUser } = require('./controllers/users');
+const auth = require('./middlewares/auth');
+const errorsHandler = require('./middlewares/errorsHandler');
 const userRouter = require('./routes/users');
 const cardRouter = require('./routes/cards');
-const {
-  NOT_FOUND_CODE,
-} = require('./utils/constants');
+const { LINK_REGEXP } = require('./utils/constants');
+const NotFoundError = require('./errors/NotFoundError');
 
 const { PORT = 3000 } = process.env;
 
@@ -15,17 +20,36 @@ mongoose.connect('mongodb://localhost:27017/mestodb', {
   useUnifiedTopology: true,
 });
 
+app.use(cookieParser());
 app.use(express.json());
-app.use((req, res, next) => {
-  req.user = {
-    _id: '62ab09db19841eb824f0f08f',
-  };
-  next();
-});
+
+app.post('/signin', celebrate({
+  body: Joi.object().keys({
+    email: Joi.string().required().email(),
+    password: Joi.string().required().min(8),
+  }),
+}), login);
+
+app.post('/signup', celebrate({
+  body: Joi.object().keys({
+    email: Joi.string().required().email(),
+    password: Joi.string().required().min(8),
+    name: Joi.string().min(2).max(30),
+    about: Joi.string().min(2).max(30),
+    avatar: Joi.string().custom(LINK_REGEXP),
+  }),
+}), createUser);
+
+app.use(auth);
 
 app.use(userRouter);
 app.use(cardRouter);
-app.use('*', (req, res) => res.status(NOT_FOUND_CODE).send({ message: 'Запрошена не существующая страница' }));
+
+app.use(errors());
+app.use('*', (req, res, next) => next(
+  new NotFoundError('Запрошен не существующий ресурс'),
+));
+app.use(errorsHandler);
 
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console
