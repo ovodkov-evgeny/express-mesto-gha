@@ -2,6 +2,9 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const NotFoundError = require('../errors/NotFoundError');
+const UnauthorizedError = require('../errors/UnauthorizedError');
+const BadRequestError = require('../errors/BadRequestError');
+const ConflictError = require('../errors/ConflictError');
 
 const { NODE_ENV, JWT_SECRET } = process.env;
 
@@ -23,7 +26,7 @@ module.exports.login = (req, res, next) => {
         .status(200)
         .send({ message: 'Вход выполнен' });
     })
-    .catch(next);
+    .catch(() => next(new UnauthorizedError('Неправильные почта или пароль')));
 };
 
 module.exports.getUser = (req, res, next) => User
@@ -50,7 +53,11 @@ module.exports.getUserId = (req, res, next) => {
       }
       res.send(user);
     })
-    .catch(next);
+    .catch((error) => {
+      if (error.name === 'CastError') {
+        next(new BadRequestError('Передан некорректный id пользователя'));
+      } next(error);
+    });
 };
 
 module.exports.createUser = (req, res, next) => {
@@ -69,7 +76,14 @@ module.exports.createUser = (req, res, next) => {
 
           res.send(newUser);
         })
-        .catch(next);
+        .catch((error) => {
+          if (error.name === 'ValidationError') {
+            next(new BadRequestError(`Переданы некорректные данные: ${error.message}`));
+          } else if (error.code === 11000) {
+            next(new ConflictError('Пользователем с данным email уже зарегистрирован'));
+          }
+          next(error);
+        });
     });
 };
 
@@ -87,7 +101,12 @@ module.exports.updateUserInfo = (req, res, next) => {
       }
       res.send(user);
     })
-    .catch(next);
+    .catch((error) => {
+      if (error.name === 'ValidationError') {
+        next(new BadRequestError(`Переданы некорректные данные: ${error.message}`));
+      }
+      next(error);
+    });
 };
 
 module.exports.updateUserAvatar = (req, res, next) => {
@@ -104,5 +123,10 @@ module.exports.updateUserAvatar = (req, res, next) => {
       }
       res.send(user);
     })
-    .catch(next);
+    .catch((error) => {
+      if (error.name === 'ValidationError') {
+        next(new BadRequestError(`Переданы некорректные данные: ${error.message}`));
+      }
+      next(error);
+    });
 };
