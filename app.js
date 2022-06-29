@@ -8,7 +8,7 @@ const auth = require('./middlewares/auth');
 const errorsHandler = require('./middlewares/errorsHandler');
 const userRouter = require('./routes/users');
 const cardRouter = require('./routes/cards');
-const { LINK_REGEXP } = require('./utils/constants');
+const { linkValidation } = require('./utils/linkValidation');
 const NotFoundError = require('./errors/NotFoundError');
 
 const { PORT = 3000 } = process.env;
@@ -36,7 +36,7 @@ app.post('/signup', celebrate({
     password: Joi.string().required().min(8),
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
-    avatar: Joi.string().custom(LINK_REGEXP),
+    avatar: Joi.string().custom(linkValidation),
   }),
 }), createUser);
 
