@@ -1,101 +1,73 @@
 const Card = require('../models/card');
-const {
-  BAD_REQUEST_CODE,
-  NOT_FOUND_CODE,
-  DEFAUTL_CODE,
-} = require('../utils/constants');
+const NotFoundError = require('../errors/NotFoundError');
+const BadRequestError = require('../errors/BadRequestError');
+const ForbiddenError = require('../errors/ForbiddenError');
 
-module.exports.getCards = (req, res) => {
+module.exports.getCards = (req, res, next) => {
   Card.find({})
     .populate('owner')
     .then((result) => res.send(result))
-    .catch(() => res
-      .status(DEFAUTL_CODE)
-      .send({ message: `${DEFAUTL_CODE}: Ошибка сервера` }));
+    .catch(next);
 };
 
-module.exports.createCard = (req, res) => {
+module.exports.createCard = (req, res, next) => {
   const { name, link } = req.body;
 
   Card.create({ name, link, owner: req.user._id })
     .then((card) => res.send(card))
     .catch((error) => {
       if (error.name === 'ValidationError') {
-        return res
-          .status(BAD_REQUEST_CODE)
-          .send({ message: `Переданы некорректные данные: ${error.message}` });
+        next(new BadRequestError(`Переданы некорректные данные: ${error.message}`));
       }
-      return res
-        .status(DEFAUTL_CODE)
-        .send({ message: `${DEFAUTL_CODE}: Ошибка сервера` });
+      next(error);
     });
 };
 
-module.exports.deleteCard = (req, res) => {
+module.exports.deleteCard = (req, res, next) => {
   Card.findByIdAndRemove(req.params.cardID)
     .then((card) => {
       if (!card) {
-        res
-          .status(NOT_FOUND_CODE)
-          .send({ message: 'Карточка не найдена.' });
+        throw new NotFoundError('Карточка не найдена.');
+      } else if (String(card.owner._id) !== req.user._id) {
+        throw new ForbiddenError('Нет прав для удаления этой карточки.');
+      } else {
+        card.remove()
+          .then(() => res.status(200).send({ message: 'Карточка удалена' }));
       }
-      res.send({ message: 'Карточка удалена' });
     })
-
-    .catch((error) => {
-      if (error.name === 'CastError') {
-        return res
-          .status(BAD_REQUEST_CODE)
-          .send({ message: 'Переданы некорректные данные' });
-      }
-      return res
-        .status(DEFAUTL_CODE)
-        .send({ message: `${DEFAUTL_CODE}: Ошибка сервера` });
-    });
+    .catch(next);
 };
 
-module.exports.setLike = (req, res) => {
+module.exports.setLike = (req, res, next) => {
   Card.findByIdAndUpdate(req.params.cardId, { $addToSet: { likes: req.user._id } }, { new: true })
     .populate('owner')
     .then((card) => {
       if (!card) {
-        res
-          .status(NOT_FOUND_CODE)
-          .send({ message: 'Переданы некорректные данные' });
+        throw new NotFoundError('Переданы некорректные данные');
       }
       res.send(card);
     })
     .catch((error) => {
       if (error.name === 'CastError') {
-        return res
-          .status(BAD_REQUEST_CODE)
-          .send({ message: 'Переданы некорректные данные' });
+        next(new BadRequestError('Переданы некорректные данные'));
       }
-      return res
-        .status(DEFAUTL_CODE)
-        .send({ message: `${DEFAUTL_CODE}: Ошибка сервера` });
+      next(error);
     });
 };
 
-module.exports.removeLike = (req, res) => {
+module.exports.removeLike = (req, res, next) => {
   Card.findByIdAndUpdate(req.params.cardId, { $pull: { likes: req.user._id } }, { new: true })
     .populate('owner')
     .then((card) => {
       if (!card) {
-        res
-          .status(NOT_FOUND_CODE)
-          .send({ message: 'Переданы некорректные данные' });
+        throw new NotFoundError('Переданы некорректные данные');
       }
       res.send(card);
     })
     .catch((error) => {
       if (error.name === 'CastError') {
-        return res
-          .status(BAD_REQUEST_CODE)
-          .send({ message: 'Переданы некорректные данные' });
+        next(new BadRequestError('Переданы некорректные данные'));
       }
-      return res
-        .status(DEFAUTL_CODE)
-        .send({ message: `${DEFAUTL_CODE}: Ошибка сервера` });
+      next(error);
     });
 };
