@@ -1,4 +1,5 @@
 const express = require('express');
+const helmet = require('helmet');
 require('dotenv').config();
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
@@ -20,6 +21,7 @@ mongoose.connect('mongodb://localhost:27017/mestodb', {
   useUnifiedTopology: true,
 });
 
+app.use(helmet);
 app.use(cookieParser());
 app.use(express.json());
 
