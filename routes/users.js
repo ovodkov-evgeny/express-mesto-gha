@@ -5,7 +5,7 @@ const { linkValidation } = require('../utils/linkValidation');
 const {
   getUser,
   getUsers,
-  getUserId,
+  getUserById,
   updateUserInfo,
   updateUserAvatar,
 } = require('../controllers/users');
@@ -16,18 +16,18 @@ router.get(
   '/users/:userId',
   celebrate({
     params: Joi.object().keys({
-      userId: Joi.string().length(24).hex(),
+      userId: Joi.string().required().length(24).hex(),
     }),
   }),
-  getUserId,
+  getUserById,
 );
 
 router.patch(
   '/users/me',
   celebrate({
     body: Joi.object().keys({
-      name: Joi.string().min(2).max(30),
-      about: Joi.string().min(2).max(30),
+      name: Joi.string().required().min(2).max(30),
+      about: Joi.string().required().min(2).max(30),
     }),
   }),
   updateUserInfo,
@@ -37,7 +37,7 @@ router.patch(
   '/users/me/avatar',
   celebrate({
     body: Joi.object().keys({
-      avatar: Joi.string().custom(linkValidation),
+      avatar: Joi.string().required().custom(linkValidation),
     }),
   }),
   updateUserAvatar,

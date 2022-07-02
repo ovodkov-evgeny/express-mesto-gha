@@ -45,14 +45,11 @@ app.use(auth);
 app.use(userRouter);
 app.use(cardRouter);
 
-app.use(errors());
 app.use('*', (req, res, next) => next(
   new NotFoundError('Запрошен не существующий ресурс'),
 ));
 
+app.use(errors());
 app.use(errorsHandler);
 
-app.listen(PORT, () => {
-  // eslint-disable-next-line no-console
-  console.log(`App listening on port ${PORT}`);
-});
+app.listen(PORT);

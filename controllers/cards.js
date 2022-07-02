@@ -14,10 +14,11 @@ module.exports.createCard = (req, res, next) => {
   const { name, link } = req.body;
 
   Card.create({ name, link, owner: req.user._id })
-    .then((card) => res.send(card))
+    .then((card) => res.status(201).send(card))
     .catch((error) => {
       if (error.name === 'ValidationError') {
         next(new BadRequestError(`Переданы некорректные данные: ${error.message}`));
+        return;
       }
       next(error);
     });
@@ -43,13 +44,14 @@ module.exports.setLike = (req, res, next) => {
     .populate('owner')
     .then((card) => {
       if (!card) {
-        throw new NotFoundError('Переданы некорректные данные');
+        throw new NotFoundError('Карточка не найдена.');
       }
       res.send(card);
     })
     .catch((error) => {
       if (error.name === 'CastError') {
         next(new BadRequestError('Переданы некорректные данные'));
+        return;
       }
       next(error);
     });
@@ -60,13 +62,14 @@ module.exports.removeLike = (req, res, next) => {
     .populate('owner')
     .then((card) => {
       if (!card) {
-        throw new NotFoundError('Переданы некорректные данные');
+        throw new NotFoundError('Карточка не найдена.');
       }
       res.send(card);
     })
     .catch((error) => {
       if (error.name === 'CastError') {
         next(new BadRequestError('Переданы некорректные данные'));
+        return;
       }
       next(error);
     });

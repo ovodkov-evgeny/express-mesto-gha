@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
 const UnauthorizedError = require('../errors/UnauthorizedError');
+const { LINK_REGEXP } = require('../utils/constants');
 
 const userSchema = new mongoose.Schema(
   {
@@ -35,13 +36,17 @@ const userSchema = new mongoose.Schema(
     avatar: {
       type: String,
       default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
+      validate: {
+        validator(v) {
+          return LINK_REGEXP.test(v);
+        },
+      },
     },
   },
   { versionKey: false },
 );
 
-// eslint-disable-next-line func-names
-userSchema.statics.findUserByCredentials = function (email, password) {
+userSchema.statics.findUserByCredentials = function findUserByCredentials(email, password) {
   const errorMessage = 'Неправильные почта или пароль';
 
   return this.findOne({ email }).select('+password')
